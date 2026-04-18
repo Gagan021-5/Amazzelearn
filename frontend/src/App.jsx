@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import SimulationPage from "./pages/SimulationPage";
 import SubjectHubPage from "./pages/SubjectHubPage";
+import ClassSelectionPage from "./pages/ClassSelectionPage";
+import ChapterListPage from "./pages/ChapterListPage";
 
 function RouteScrollManager() {
   const location = useLocation();
@@ -18,7 +20,28 @@ function RouteScrollManager() {
   return null;
 }
 
+/* ── Page transition wrapper ── */
+function PageTransition({ children }) {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
+  const location = useLocation();
+
   return (
     <div className="app-shell relative min-h-screen overflow-hidden">
       {/* ── Ambient mesh gradient blobs ── */}
@@ -53,10 +76,44 @@ export default function App() {
       <RouteScrollManager />
       <Navbar />
       <main className="relative z-10 flex-1">
-        <Routes>
+        <Routes location={location}>
+          {/* ── Home ── */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/subject/:subjectId" element={<SubjectHubPage />} />
-          <Route path="/simulation/:simulationId" element={<SimulationPage />} />
+
+          {/* ── Subject Hub (subcategories or direct class grid) ── */}
+          <Route path="/subject/:subjectSlug" element={<SubjectHubPage />} />
+
+          {/* ── Class Selection (via subcategory) ── */}
+          <Route
+            path="/subject/:subjectSlug/:subcategorySlug"
+            element={<ClassSelectionPage />}
+          />
+
+          {/* ── Chapter List (Mathematics — no subcategory) ── */}
+          <Route
+            path="/subject/:subjectSlug/class/:classLevel"
+            element={<ChapterListPage />}
+          />
+
+          {/* ── Chapter List (with subcategory) ── */}
+          <Route
+            path="/subject/:subjectSlug/:subcategorySlug/class/:classLevel"
+            element={<ChapterListPage />}
+          />
+
+          {/* ── Simulation Lab (Mathematics — no subcategory) ── */}
+          <Route
+            path="/subject/:subjectSlug/class/:classLevel/chapter/:chapterSlug/lab"
+            element={<SimulationPage />}
+          />
+
+          {/* ── Simulation Lab (with subcategory) ── */}
+          <Route
+            path="/subject/:subjectSlug/:subcategorySlug/class/:classLevel/chapter/:chapterSlug/lab"
+            element={<SimulationPage />}
+          />
+
+          {/* ── 404 ── */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

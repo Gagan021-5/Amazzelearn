@@ -6,12 +6,12 @@ import {
   AlertTriangle,
   Lock,
   ChevronDown,
-  ChevronRight,
   RotateCcw,
   ArrowLeft,
   Sparkles,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
-import { subjectMap } from "../data/subjects";
 import Confetti from "./Confetti";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -132,26 +132,44 @@ const overlayVariants = {
 
 /* ═══════════════════════════════════════════════════════════════════
  *  SimulationWrapper — "Lab Monitor" shell
+ *  Now accepts backTo/backLabel props for deep routing
  * ═══════════════════════════════════════════════════════════════════ */
-export default function SimulationWrapper({ simulation, controller, children }) {
-  const subject = subjectMap[simulation.subjectId];
+export default function SimulationWrapper({
+  simulation,
+  controller,
+  children,
+  backTo = "/",
+  backLabel = "Back",
+}) {
   const overlayStyle = controller.overlay
     ? overlayVariants[controller.overlay.variant]
     : null;
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
 
   return (
-    <section className="space-y-6">
+    <section
+      className={[
+        "space-y-6 transition-all duration-300",
+        isFullscreen
+          ? "fixed inset-0 z-[100] overflow-y-auto bg-white/95 backdrop-blur-xl p-4 sm:p-6"
+          : "",
+      ].join(" ")}
+    >
       {/* ── Header Panel ── */}
       <div className="rounded-3xl border border-white/50 bg-white/70 px-6 py-6 shadow-soft backdrop-blur-xl sm:px-8 sm:py-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <Link
-                to={subject.path}
+                to={backTo}
                 className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-violet-700 ring-1 ring-violet-100 transition hover:bg-violet-100"
               >
-                {subject.title}
+                {simulation.subjectLabel}
               </Link>
               <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {simulation.topic}
@@ -225,7 +243,7 @@ export default function SimulationWrapper({ simulation, controller, children }) 
               ))}
             </div>
 
-            {/* Health bar underneath */}
+            {/* Health bar */}
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <motion.div
                 className={`h-full rounded-full ${
@@ -248,6 +266,20 @@ export default function SimulationWrapper({ simulation, controller, children }) 
       <div className="relative rounded-3xl border border-slate-200/50 bg-white shadow-soft-lg">
         {/* Top glowing border accent */}
         <div className="absolute -top-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent" />
+
+        {/* Fullscreen toggle */}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className="absolute right-4 top-4 z-30 rounded-xl bg-white/80 p-2 text-slate-500 ring-1 ring-slate-200/60 transition hover:bg-slate-50 hover:text-slate-900 hover:shadow-md"
+          title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="h-4 w-4" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
+        </button>
 
         {/* Canvas inner shadow shell */}
         <div className="p-3 sm:p-4">
@@ -324,11 +356,11 @@ export default function SimulationWrapper({ simulation, controller, children }) 
       {/* ── Action bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          to={subject.path}
+          to={backTo}
           className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200/60 transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to {subject.title}
+          {backLabel}
         </Link>
         <button
           type="button"

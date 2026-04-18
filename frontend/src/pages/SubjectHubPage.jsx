@@ -1,38 +1,88 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link, useParams } from "react-router-dom";
-import { Search, X, Sparkles, ArrowRight, Filter } from "lucide-react";
-import SimulationCard from "../components/SimulationCard";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { Link, useParams, Navigate } from "react-router-dom";
+import {
+  Sparkles,
+  Beaker,
+  Calculator,
+  Globe2,
+  BookOpenText,
+  ArrowRight,
+} from "lucide-react";
+import Breadcrumbs from "../components/Breadcrumbs";
+import SubcategoryCard from "../components/SubcategoryCard";
+import ClassCard from "../components/ClassCard";
 import { subjectMap } from "../data/subjects";
-import { getSimulationsBySubject } from "../simulations/registry";
+import { getChapters, getAvailableClasses } from "../data/chapters";
 import NotFoundPage from "./NotFoundPage";
 
+/* ═══════════════════════════════════════════════════════════════════
+ *  SubjectHubPage — shows subcategory grid OR class grid (for Math)
+ *  Route: /subject/:subjectSlug
+ * ═══════════════════════════════════════════════════════════════════ */
+
+const iconMap = {
+  beaker: Beaker,
+  calculator: Calculator,
+  "globe-2": Globe2,
+  "book-open-text": BookOpenText,
+};
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const springUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 200, damping: 20 },
+  },
+};
+
 export default function SubjectHubPage() {
-  const { subjectId } = useParams();
-  const subject = subjectMap[subjectId];
-  const [searchQuery, setSearchQuery] = useState("");
+  const { subjectSlug } = useParams();
+  const subject = subjectMap[subjectSlug];
+
+  // For subjects without subcategories (Mathematics), get available classes directly
+  const availableClasses = useMemo(() => {
+    if (!subject || subject.hasSubcategories) return [];
+    return getAvailableClasses(subjectSlug);
+  }, [subject, subjectSlug]);
+
+  // For subcategory chapter counts
+  const subcategoryChapterCounts = useMemo(() => {
+    if (!subject?.hasSubcategories) return {};
+    const counts = {};
+    subject.subcategories.forEach((sub) => {
+      counts[sub.slug] = getChapters({
+        subjectSlug: subject.id,
+        subcategorySlug: sub.slug,
+      }).length;
+    });
+    return counts;
+  }, [subject]);
 
   if (!subject) {
     return <NotFoundPage />;
   }
 
-  const allSimulations = getSimulationsBySubject(subject.id);
+  const SubjectIcon = iconMap[subject.icon] || Beaker;
 
-  const filteredSimulations = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return allSimulations;
-
-    return allSimulations.filter(
-      (sim) =>
-        sim.title.toLowerCase().includes(query) ||
-        sim.topic.toLowerCase().includes(query) ||
-        sim.summary.toLowerCase().includes(query) ||
-        sim.challenge.toLowerCase().includes(query),
-    );
-  }, [allSimulations, searchQuery]);
+  // For Mathematics (no subcategories), show class grid directly
+  const showClassGrid = !subject.hasSubcategories;
 
   return (
     <div className="px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+      {/* ── Breadcrumbs ── */}
+      <div className="mx-auto max-w-7xl">
+        <Breadcrumbs
+          items={[{ label: subject.title }]}
+        />
+      </div>
+
       {/* ═════════ HERO HEADER ═════════ */}
       <section className="mx-auto max-w-7xl">
         <div className="relative overflow-hidden rounded-[2rem]">
@@ -41,7 +91,7 @@ export default function SubjectHubPage() {
             className={`absolute inset-0 bg-gradient-to-br ${subject.accent} opacity-[0.06]`}
           />
 
-          {/* Decorative shapes */}
+          {/* Floating shapes */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <motion.div
               animate={{ y: [-6, 8, -6] }}
@@ -53,6 +103,11 @@ export default function SubjectHubPage() {
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="absolute bottom-[20%] left-[8%] h-8 w-8 rounded-lg border-2 border-amazze-mint-200/30 bg-amazze-mint-100/20"
             />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute left-[45%] top-[10%] h-6 w-6 rounded-md border-2 border-amazze-orange-200/20 bg-amazze-orange-100/15"
+            />
           </div>
 
           <div className="relative px-6 py-12 sm:px-10 sm:py-16">
@@ -62,177 +117,159 @@ export default function SubjectHubPage() {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               className="max-w-2xl"
             >
-              <span className="badge-amazze">
-                <Sparkles className="h-3 w-3" />
-                {subject.eyebrow}
-              </span>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${subject.accent} text-white shadow-lg`}
+                >
+                  <SubjectIcon className="h-6 w-6" strokeWidth={2} />
+                </div>
+                <span className="badge-amazze">
+                  <Sparkles className="h-3 w-3" />
+                  {subject.eyebrow}
+                </span>
+              </div>
+
               <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
                 {subject.heroTitle}
               </h1>
               <p className="mt-4 max-w-xl text-base text-slate-500">
                 {subject.description}
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                  <Link
-                    to={`/simulation/${allSimulations[0].id}`}
-                    className="btn-primary"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Launch Featured Lab
-                  </Link>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Link to="/" className="btn-secondary">
-                    Back Home
-                  </Link>
-                </motion.div>
-              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ═════════ CONTENT GRID WITH SIDEBAR ═════════ */}
-      <section className="mx-auto mt-10 max-w-7xl">
-        <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-          {/* ── Glassmorphic Sticky Sidebar ── */}
-          <motion.aside
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
-            className="lg:sticky lg:top-24 lg:self-start"
-          >
-            <div className="rounded-3xl border border-white/50 bg-white/70 p-6 shadow-soft backdrop-blur-xl">
-              <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amazze-purple-50">
-                  <Filter className="h-4 w-4 text-amazze-purple-500" />
-                </div>
-                Filter Labs
-              </div>
-
-              {/* Premium pill search bar */}
-              <div className="relative mt-5">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search labs…"
-                  className="w-full rounded-full border border-slate-200/60 bg-white py-3 pl-10 pr-10 text-sm font-semibold text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-amazze-purple-300 focus:outline-none focus:ring-4 focus:ring-amazze-purple-100"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-slate-100 p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {searchQuery && (
-                <p className="mt-3 text-xs font-bold text-slate-400">
-                  <span className="text-amazze-purple-500">{filteredSimulations.length}</span>{" "}
-                  of {allSimulations.length} labs
-                </p>
-              )}
-
-              {/* Subject highlights */}
-              <div className="mt-5 border-t border-slate-200/40 pt-5">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
-                  Available Topics
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {subject.highlights.map((h) => (
-                    <motion.button
-                      key={h}
-                      type="button"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSearchQuery(h.split(" ")[0])}
-                      className="rounded-full bg-amazze-purple-50 px-3 py-1.5 text-xs font-bold text-amazze-purple-600 ring-1 ring-amazze-purple-100 transition hover:bg-amazze-purple-100"
-                    >
-                      {h}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick nav */}
-              <div className="mt-5 border-t border-slate-200/40 pt-5">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
-                  Quick Launch
-                </p>
-                <div className="mt-3 space-y-1">
-                  {allSimulations.map((sim) => (
-                    <Link
-                      key={sim.id}
-                      to={`/simulation/${sim.id}`}
-                      className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-amazze-purple-50 hover:text-amazze-purple-600"
-                    >
-                      <span>{sim.title}</span>
-                      <ArrowRight className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-100 group-hover:translate-x-0.5" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.aside>
-
-          {/* ── Simulation Cards Grid ── */}
-          <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-extrabold text-slate-900">
-                All {subject.title} Labs
+      {/* ═════════ SUBCATEGORY GRID or CLASS GRID ═════════ */}
+      <section className="mx-auto mt-12 max-w-7xl">
+        {showClassGrid ? (
+          /* ── Mathematics: Direct Class Selection ── */
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-8 text-center"
+            >
+              <h2 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                Select your{" "}
+                <span className="text-gradient-warm">class</span>
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {allSimulations.length} interactive simulations with guided feedback
+              <p className="mt-2 text-sm text-slate-500">
+                Choose your grade to explore available chapters and simulation labs
               </p>
-            </div>
+            </motion.div>
 
-            {filteredSimulations.length > 0 ? (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                <AnimatePresence mode="popLayout">
-                  {filteredSimulations.map((simulation, index) => (
-                    <motion.div
-                      key={simulation.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3, delay: index * 0.04 }}
-                    >
-                      <SimulationCard simulation={simulation} index={0} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex min-h-[200px] items-center justify-center rounded-3xl border-2 border-dashed border-slate-200/60 bg-white/40"
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((level, i) => {
+                const chapters = getChapters({
+                  subjectSlug: subject.id,
+                  classLevel: level,
+                });
+                return (
+                  <ClassCard
+                    key={level}
+                    classLevel={level}
+                    to={`/subject/${subject.id}/class/${level}`}
+                    chapterCount={chapters.length}
+                    subjectSlug={subject.id}
+                    hasChapters={chapters.length > 0}
+                    index={i}
+                  />
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          /* ── Subjects with Subcategories ── */
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-8 text-center"
+            >
+              <h2 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                Choose a{" "}
+                <span className="text-gradient-amazze">branch</span>
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Select a subcategory to explore class-wise chapters and labs
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+              className={`grid gap-6 ${
+                subject.subcategories.length <= 2
+                  ? "sm:grid-cols-2 max-w-2xl mx-auto"
+                  : subject.subcategories.length === 3
+                    ? "sm:grid-cols-2 lg:grid-cols-3"
+                    : "sm:grid-cols-2 lg:grid-cols-4"
+              }`}
+            >
+              {subject.subcategories
+                .sort((a, b) => a.order - b.order)
+                .map((sub, i) => (
+                  <motion.div key={sub.slug} variants={springUp}>
+                    <SubcategoryCard
+                      subcategory={sub}
+                      subjectSlug={subject.id}
+                      chapterCount={subcategoryChapterCounts[sub.slug] || 0}
+                      index={i}
+                    />
+                  </motion.div>
+                ))}
+            </motion.div>
+          </>
+        )}
+      </section>
+
+      {/* ═════════ QUICK STATS ═════════ */}
+      <section className="mx-auto mt-16 max-w-7xl">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              label: showClassGrid ? "Classes" : "Subcategories",
+              value: showClassGrid ? 10 : subject.subcategories.length,
+              color: "text-amazze-purple-500 bg-amazze-purple-50",
+            },
+            {
+              label: "Total Chapters",
+              value: getChapters({ subjectSlug: subject.id }).length,
+              color: "text-amazze-sky-500 bg-amazze-sky-50",
+            },
+            {
+              label: "Learn by Doing",
+              value: "100%",
+              color: "text-amazze-mint-500 bg-amazze-mint-50",
+            },
+          ].map((stat) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -3 }}
+              className="flex items-center gap-4 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-soft backdrop-blur-sm"
+            >
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.color} text-lg font-extrabold`}
               >
-                <div className="text-center">
-                  <Search className="mx-auto h-10 w-10 text-slate-300" />
-                  <p className="mt-3 text-sm font-bold text-slate-400">
-                    No labs match &ldquo;{searchQuery}&rdquo;
-                  </p>
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setSearchQuery("")}
-                    className="btn-secondary mt-3"
-                  >
-                    Clear search
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </div>
+                {typeof stat.value === "number" ? stat.value : "✓"}
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-slate-900">
+                  {stat.value}
+                </p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                  {stat.label}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
     </div>

@@ -15,10 +15,8 @@ import {
 } from "lucide-react";
 import SubjectCard from "../components/SubjectCard";
 import { subjectCatalog } from "../data/subjects";
-import {
-  getSimulationsBySubject,
-  simulationCatalog,
-} from "../simulations/registry";
+import { chapterCatalog } from "../data/chapters";
+import { simulationCatalog } from "../simulations/registry";
 
 /* ── Animated counter that counts up on scroll ── */
 function AnimatedCounter({ target, suffix = "" }) {
@@ -147,8 +145,8 @@ export default function HomePage() {
                 variants={springUp}
                 className="mt-6 text-base leading-relaxed text-slate-500 sm:text-lg"
               >
-                Interactive STEM and humanities labs designed to be clear, playful,
-                and deeply educational — from chemistry benches to civics boards.
+                Interactive STEM, humanities, and language labs designed to be clear, playful,
+                and deeply educational — from chemistry benches to grammar builders.
               </motion.p>
 
               <motion.div
@@ -188,12 +186,12 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, type: "spring", stiffness: 200, damping: 20 }}
-              className="mx-auto mt-16 grid max-w-2xl gap-4 sm:grid-cols-3"
+              className="mx-auto mt-16 grid max-w-3xl gap-4 sm:grid-cols-4"
             >
               {[
                 {
                   icon: Beaker,
-                  label: "Subject Labs",
+                  label: "Subjects",
                   value: subjectCatalog.length,
                   color: "text-amazze-purple-500 bg-amazze-purple-50",
                 },
@@ -204,8 +202,14 @@ export default function HomePage() {
                   color: "text-amazze-sky-500 bg-amazze-sky-50",
                 },
                 {
+                  icon: BookOpen,
+                  label: "Chapters",
+                  value: chapterCatalog.length,
+                  color: "text-amazze-mint-500 bg-amazze-mint-50",
+                },
+                {
                   icon: Globe,
-                  label: "Max Attempts",
+                  label: "Classes",
                   value: 10,
                   color: "text-amazze-orange-500 bg-amazze-orange-50",
                 },
@@ -258,13 +262,12 @@ export default function HomePage() {
           </p>
         </motion.div>
 
-        {/* ── Subject Cards Grid ── */}
-        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+        {/* ── Subject Cards Grid — now 4 cards ── */}
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {subjectCatalog.map((subject, index) => (
             <SubjectCard
               key={subject.id}
               subject={subject}
-              simulationCount={getSimulationsBySubject(subject.id).length}
               index={index}
             />
           ))}
