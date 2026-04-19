@@ -1,163 +1,66 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSinglePlacementGame } from "../../hooks/useSinglePlacementGame";
+import SimulationCanvas from "../../components/SimulationCanvas";
 
 const slots = [
-  {
-    id: "source",
-    label: "Energy Source",
-    hint: "What supplies the potential difference?",
-  },
-  {
-    id: "path",
-    label: "Conductor",
-    hint: "What carries charge around the loop?",
-  },
-  {
-    id: "switch",
-    label: "Control",
-    hint: "Use a switch that can complete the circuit.",
-  },
-  {
-    id: "load",
-    label: "Output Device",
-    hint: "What should receive the electrical energy?",
-  },
+  { id: "source", label: "Energy Source" },
+  { id: "path", label: "Conductor" },
+  { id: "switch", label: "Control" },
+  { id: "load", label: "Output Device" },
 ];
 
 const parts = [
   {
     id: "battery",
-    label: "Battery Cell",
-    short: "1.5 V source",
-    note: "Provides the push that drives current around the circuit.",
-    tone: "from-rose-400 to-orange-500",
+    type: "source",
+    tone: "from-rose-400 to-amber-500",
+    imgSrc: "/assets/mock/battery.png", // Mock path as requested
+    icon: (
+      <svg viewBox="0 0 100 100" className="w-full h-full fill-white drop-shadow-md">
+        <rect x="25" y="30" width="50" height="65" rx="8" />
+        <rect x="40" y="20" width="20" height="10" rx="3" fill="#cbd5e1" />
+        <text x="50" y="70" textAnchor="middle" fill="#1e293b" fontSize="24" fontWeight="bold" fontFamily="sans-serif">+</text>
+      </svg>
+    )
   },
   {
-    id: "copper-wire",
-    label: "Copper Wire",
-    short: "Conductor",
-    note: "Lets electric charge move easily through the path.",
+    id: "wire",
+    type: "path",
     tone: "from-amber-400 to-yellow-500",
+    imgSrc: "/assets/mock/wire.png",
+    icon: (
+      <svg viewBox="0 0 100 100" className="w-full h-full stroke-orange-700 drop-shadow-md" fill="none" strokeWidth="12" strokeLinecap="round">
+        <path d="M20 80 Q 50 20 80 80" />
+      </svg>
+    )
   },
   {
-    id: "plastic-strip",
-    label: "Plastic Strip",
-    short: "Insulator",
-    note: "Blocks the current because plastic is an electrical insulator.",
-    tone: "from-slate-400 to-slate-600",
-  },
-  {
-    id: "closed-switch",
-    label: "Closed Switch",
-    short: "Path connected",
-    note: "Completes the conducting path so current can flow.",
+    id: "switch-closed",
+    type: "switch",
     tone: "from-emerald-400 to-teal-500",
-  },
-  {
-    id: "open-switch",
-    label: "Open Switch",
-    short: "Path broken",
-    note: "Leaves a gap in the circuit, so no current flows.",
-    tone: "from-sky-400 to-cyan-500",
+    imgSrc: "/assets/mock/switch.png",
+    icon: (
+      <svg viewBox="0 0 100 100" className="w-full h-full stroke-white fill-none drop-shadow-md" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="25" cy="50" r="6" fill="white" />
+        <circle cx="75" cy="50" r="6" fill="white" />
+        <line x1="25" y1="50" x2="75" y2="50" />
+      </svg>
+    )
   },
   {
     id: "bulb",
-    label: "Lamp Bulb",
-    short: "Light output",
-    note: "Glows when electrical energy reaches the filament.",
-    tone: "from-yellow-400 to-orange-500",
-  },
-  {
-    id: "buzzer",
-    label: "Buzzer",
-    short: "Sound output",
-    note: "Would make sound in a closed circuit, but it does not light a lamp.",
-    tone: "from-violet-400 to-fuchsia-500",
+    type: "load",
+    tone: "from-sky-400 to-indigo-500",
+    imgSrc: "/assets/mock/bulb.png",
+    icon: (
+      <svg viewBox="0 0 100 100" className="w-full h-full fill-yellow-300 stroke-yellow-500 drop-shadow-md" strokeWidth="3">
+        <path d="M50 15 C 30 15 25 35 30 50 C 35 60 40 65 40 80 L 60 80 C 60 65 65 60 70 50 C 75 35 70 15 50 15 Z" />
+        <polygon points="40,80 60,80 55,90 45,90" fill="#94a3b8" stroke="#64748b" />
+      </svg>
+    )
   },
 ];
-
-const idleEvaluation = {
-  title: "Workbench Ready",
-  observation:
-    "Build a circuit with a source, a conducting path, a closed switch, and a bulb.",
-  evidence:
-    "Current only flows when every required part makes one unbroken conducting loop.",
-  currentFlows: false,
-  success: false,
-  glow: "rgba(148,163,184,0.2)",
-};
-
-function evaluateCircuit(placements) {
-  const hasAllParts = slots.every((slot) => placements[slot.id]);
-
-  if (!hasAllParts) {
-    return idleEvaluation;
-  }
-
-  if (placements.source !== "battery") {
-    return {
-      title: "No Active Source",
-      observation:
-        "The circuit has no correct energy source, so there is no potential difference to drive charge.",
-      evidence: "Without a source, the lamp cannot light.",
-      currentFlows: false,
-      success: false,
-      glow: "rgba(148,163,184,0.2)",
-    };
-  }
-
-  if (placements.path !== "copper-wire") {
-    return {
-      title: "Insulating Path",
-      observation:
-        "A plastic strip breaks the conducting path because plastic is an electrical insulator.",
-      evidence: "Charge cannot move easily through the path, so current stays at zero.",
-      currentFlows: false,
-      success: false,
-      glow: "rgba(148,163,184,0.2)",
-    };
-  }
-
-  if (placements.switch !== "closed-switch") {
-    return {
-      title: "Open Circuit",
-      observation:
-        "An open switch leaves a gap in the path, so the circuit is incomplete.",
-      evidence: "Current stops at the open gap and the bulb stays off.",
-      currentFlows: false,
-      success: false,
-      glow: "rgba(59,130,246,0.18)",
-    };
-  }
-
-  if (placements.load === "buzzer") {
-    return {
-      title: "Closed Circuit, Wrong Output",
-      observation:
-        "The circuit is complete, so current would flow, but the load is a buzzer rather than a lamp.",
-      evidence: "Electrical energy reaches the device, yet there is no bulb to glow.",
-      currentFlows: true,
-      success: false,
-      glow: "rgba(168,85,247,0.22)",
-    };
-  }
-
-  if (placements.load === "bulb") {
-    return {
-      title: "Lamp Powered",
-      observation:
-        "The battery, copper wire, closed switch, and bulb form one complete conducting loop.",
-      evidence:
-        "Current can now flow through the filament, so the lamp lights.",
-      currentFlows: true,
-      success: true,
-      glow: "rgba(250,204,21,0.28)",
-    };
-  }
-
-  return idleEvaluation;
-}
 
 export default function CircuitBuilder({ controller }) {
   const {
@@ -176,11 +79,12 @@ export default function CircuitBuilder({ controller }) {
   const [dragOverSlot, setDragOverSlot] = useState(null);
 
   const partMap = useMemo(
-    () => Object.fromEntries(parts.map((part) => [part.id, part])),
+    () => Object.fromEntries(parts.map((p) => [p.id, p])),
     [],
   );
 
-  const evaluation = useMemo(() => evaluateCircuit(placements), [placements]);
+  const isComplete = slots.every((s) => placements[s.id]);
+  const isWorking = isComplete && placements.source === "battery" && placements.path === "wire" && placements.switch === "switch-closed" && placements.load === "bulb";
 
   const handleSelect = (itemId) => {
     controller.clearFeedback();
@@ -188,373 +92,122 @@ export default function CircuitBuilder({ controller }) {
   };
 
   const handlePlace = (slotId, itemId) => {
-    if (controller.isLocked || !itemId) {
-      return;
-    }
-
+    if (controller.isLocked || !itemId) return;
     controller.clearFeedback();
     placeItem(slotId, itemId);
     setDragOverSlot(null);
   };
 
-  const handleCheck = () => {
-    if (slots.some((slot) => !placements[slot.id])) {
-      controller.submitAttempt(false, {
-        failure:
-          "Place one part in every workbench slot before checking whether the circuit will run.",
-        locked:
-          "The board is locked after 10 tries. Restart the circuit lab and rebuild the loop.",
-      });
-      return;
-    }
-
-    controller.submitAttempt(evaluation.success, {
-      success:
-        "Circuit complete. The battery, copper wire, closed switch, and bulb make a working loop.",
-      failure:
-        evaluation.currentFlows && placements.load === "buzzer"
-          ? "Current would flow, but the output device is a buzzer. Use a bulb to complete the lamp challenge."
-          : evaluation.observation,
-      locked:
-        "The board is locked after 10 tries. Restart the circuit lab and build a fresh loop.",
-    });
-  };
-
-  return (
-    <div className="sim-layout">
-      {/* ─── Item Bank ─── */}
-      <div className="item-bank">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Component Tray
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Closed circuit workbench</h2>
+  const itemBankContent = (
+    <div className="grid grid-cols-2 gap-4">
+      {parts.map((part) => (
+        <motion.button
+          key={part.id}
+          type="button"
+          disabled={controller.isLocked}
+          draggable={!controller.isLocked}
+          onDragStart={() => {
+            controller.clearFeedback();
+            setDraggedItemId(part.id);
+            setSelectedItemId(part.id);
+          }}
+          onDragEnd={() => setDraggedItemId(null)}
+          onClick={() => handleSelect(part.id)}
+          whileHover={{ scale: 1.05 }}
+          whileDrag={{ scale: 1.1, boxShadow: "0px 10px 20px rgba(0,0,0,0.15)", zIndex: 50 }}
+          whileTap={{ scale: 0.95 }}
+          className={[
+            "relative flex aspect-square flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-md transition-all cursor-grab active:cursor-grabbing",
+            selectedItemId === part.id ? "ring-4 ring-indigo-400 shadow-xl" : "border-2 border-slate-100",
+            isPlaced(part.id) ? "opacity-30 pointer-events-none" : "",
+          ].join(" ")}
+        >
+          {/* We accept image or icon per prompt */}
+          <div className={`flex w-full h-full items-center justify-center rounded-xl bg-gradient-to-br ${part.tone}`}>
+             {part.icon}
           </div>
-          <div className="rounded-2xl bg-indigo-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">
-              Target
-            </p>
-            <p className="mt-1 text-sm font-bold text-indigo-900">
-              Light the lamp safely
-            </p>
-          </div>
-        </div>
+          {/* Hover to reveal mock path info */}
+          <span className="absolute -bottom-6 text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            src: {part.imgSrc}
+          </span>
+        </motion.button>
+      ))}
+    </div>
+  );
 
-        <div className="inventory-rail hide-scrollbar mt-6">
-          {parts.map((part) => (
-            <motion.button
-              key={part.id}
+  const dropCanvasContent = (
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {slots.map((slot) => {
+          const part = placements[slot.id] ? partMap[placements[slot.id]] : null;
+          const isDragOver = dragOverSlot === slot.id;
+
+          return (
+            <button
+              key={slot.id}
               type="button"
-              draggable={!controller.isLocked}
-              onDragStart={() => {
-                controller.clearFeedback();
-                setDraggedItemId(part.id);
-                setSelectedItemId(part.id);
-              }}
-              onDragEnd={() => setDraggedItemId(null)}
-              onClick={() => handleSelect(part.id)}
               disabled={controller.isLocked}
-              whileHover={{ scale: 1.02 }}
-              whileDrag={{ scale: 1.05, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
-              whileTap={{ scale: 0.97 }}
+              onClick={() => handlePlace(slot.id, selectedItemId)}
+              onDragOver={(e) => { e.preventDefault(); setDragOverSlot(slot.id); }}
+              onDragLeave={() => setDragOverSlot(null)}
+              onDrop={(e) => { e.preventDefault(); handlePlace(slot.id, selectedItemId); }}
               className={[
-                "token-card h-full",
-                selectedItemId === part.id
-                  ? "border-sky-300 ring-4 ring-sky-100"
-                  : "",
-                isPlaced(part.id) ? "opacity-40 pointer-events-none" : "",
+                "flex aspect-square flex-col items-center justify-center rounded-[22px] border-2 border-dashed p-4 transition-all relative overflow-hidden",
+                part ? "border-indigo-200 bg-indigo-50" : "border-slate-300 bg-slate-50/50 hover:bg-slate-100",
+                isDragOver ? "bg-indigo-100/50 border-indigo-400 ring-4 ring-indigo-100" : ""
               ].join(" ")}
             >
-              <div className="flex items-start gap-3">
-                <div
-                  className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${part.tone} shadow-md`}
-                />
-                <div>
-                  <p className="text-base font-semibold text-slate-900">
-                    {part.label}
-                  </p>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    {part.short}
-                  </p>
-                  <p className="mt-1.5 text-sm text-slate-500">{part.note}</p>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Drop Canvas ─── */}
-      <div className="drop-canvas">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Physics Stage
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Assemble the energy pathway</h2>
-          </div>
-          <div
-            className={`status-pill ${
-              evaluation.currentFlows
-                ? "bg-amber-50 text-amber-700"
-                : "bg-slate-100 text-slate-600"
-            }`}
-          >
-            {evaluation.currentFlows ? "Current path closed" : "Current path open"}
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#eef6ff_0%,#ffffff_48%,#fff8eb_100%)] p-5 sm:p-6">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {slots.map((slot) => {
-                  const part = placements[slot.id]
-                    ? partMap[placements[slot.id]]
-                    : null;
-                  const isDragOver = dragOverSlot === slot.id;
-
-                  return (
-                    <button
-                      key={slot.id}
-                      type="button"
-                      disabled={controller.isLocked}
-                      onClick={() => handlePlace(slot.id, selectedItemId)}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        setDragOverSlot(slot.id);
-                      }}
-                      onDragLeave={() => setDragOverSlot(null)}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        handlePlace(slot.id, selectedItemId);
-                      }}
-                      className={[
-                        "drop-slot text-left",
-                        part ? "border-indigo-200 bg-indigo-50/60" : "",
-                        isDragOver ? "drop-slot-active" : "",
-                      ].join(" ")}
-                    >
-                      {part ? (
-                        <div className="flex items-start gap-3 text-left">
-                          <div
-                            className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${part.tone} shadow-md`}
-                          />
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                              {slot.label}
-                            </p>
-                            <p className="mt-2 text-base font-semibold text-slate-900">
-                              {part.label}
-                            </p>
-                            <p className="text-sm text-slate-500">{part.short}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-base font-semibold text-slate-800">
-                            {slot.label}
-                          </p>
-                          <p className="mt-2 text-sm text-slate-500">{slot.hint}</p>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 sm:p-6">
-                <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-                  <div className="rounded-[26px] bg-[radial-gradient(circle_at_25%_22%,rgba(14,165,233,0.12),transparent_24%),radial-gradient(circle_at_82%_24%,rgba(251,191,36,0.18),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.85)_0%,rgba(241,245,249,0.72)_100%)] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Circuit schematic
-                    </p>
-                    <div className="relative mt-5 flex min-h-[250px] items-center justify-center">
-                      <svg viewBox="0 0 520 240" className="w-full max-w-[520px]">
-                        <motion.path
-                          d="M92 120H208H324H428"
-                          fill="none"
-                          stroke={
-                            evaluation.currentFlows || controller.status === "success"
-                              ? "#f59e0b"
-                              : "#94a3b8"
-                          }
-                          strokeWidth="14"
-                          strokeLinecap="round"
-                          animate={{
-                            pathLength:
-                              evaluation.currentFlows || controller.status === "success"
-                                ? 1
-                                : 0.58,
-                            opacity:
-                              evaluation.currentFlows || controller.status === "success"
-                                ? 1
-                                : 0.78,
-                          }}
-                          transition={{ duration: 0.6 }}
-                        />
-
-                        {[92, 208, 324, 428].map((x) => (
-                          <circle
-                            key={x}
-                            cx={x}
-                            cy="120"
-                            r="18"
-                            fill="white"
-                            stroke="#334155"
-                            strokeWidth="5"
-                          />
-                        ))}
-
-                        {evaluation.currentFlows
-                          ? [0, 1, 2, 3].map((index) => (
-                              <motion.circle
-                                key={index}
-                                cx="104"
-                                cy="120"
-                                r="8"
-                                fill="#fde68a"
-                                animate={{ cx: [104, 416], opacity: [0, 1, 0] }}
-                                transition={{
-                                  duration: 1.8,
-                                  repeat: Infinity,
-                                  delay: index * 0.35,
-                                }}
-                              />
-                            ))
-                          : null}
-                      </svg>
-
-                      <div className="pointer-events-none absolute inset-0 grid grid-cols-4 items-center gap-3">
-                        {slots.map((slot) => {
-                          const part = placements[slot.id]
-                            ? partMap[placements[slot.id]]
-                            : null;
-
-                          return (
-                            <div key={slot.id} className="flex justify-center">
-                              <div className="rounded-[20px] bg-white/92 px-3 py-3 text-center shadow-md ring-1 ring-slate-100">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                  {slot.label}
-                                </p>
-                                <p className="mt-2 text-sm font-semibold text-slate-900">
-                                  {part ? part.label : "Empty"}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={Object.values(placements).join("|") || "idle"}
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="panel-card p-5"
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          Diagnostic result
-                        </p>
-                        <p className="mt-3 text-base font-semibold text-slate-900">
-                          {evaluation.title}
-                        </p>
-                        <p className="mt-3 text-sm text-slate-500">
-                          {evaluation.observation}
-                        </p>
-                        <p className="mt-3 text-sm text-slate-400">
-                          {evaluation.evidence}
-                        </p>
-                      </motion.div>
-                    </AnimatePresence>
-
-                    <motion.div
-                      animate={{
-                        scale:
-                          evaluation.success || controller.status === "success"
-                            ? [1, 1.05, 1]
-                            : 1,
-                        boxShadow:
-                          evaluation.success || controller.status === "success"
-                            ? [
-                                "0 0 0 8px rgba(250,204,21,0.3), 0 0 30px rgba(250,204,21,0.25)",
-                                "0 0 0 18px rgba(250,204,21,0.15), 0 0 50px rgba(250,204,21,0.35)",
-                                "0 0 0 8px rgba(250,204,21,0.3), 0 0 30px rgba(250,204,21,0.25)",
-                              ]
-                            : `0 0 0 0 ${evaluation.glow}`,
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat:
-                          evaluation.success || controller.status === "success"
-                            ? Infinity
-                            : 0,
-                      }}
-                      className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border-8 border-slate-300 bg-white"
-                    >
-                      <motion.div
-                        animate={{
-                          backgroundColor:
-                            evaluation.success || controller.status === "success"
-                              ? ["#fde68a", "#fbbf24", "#fde68a"]
-                              : evaluation.currentFlows
-                                ? "#c4b5fd"
-                                : "#e2e8f0",
-                        }}
-                        transition={{
-                          duration: 1.2,
-                          repeat: evaluation.success || controller.status === "success" ? Infinity : 0,
-                        }}
-                        className="h-14 w-14 rounded-full"
-                      />
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="panel-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Physics rule
-                </p>
-                <p className="mt-3 text-sm text-slate-500">
-                  A working lamp circuit needs a source, a conductor, a closed
-                  switch, and the correct output device all connected in one loop.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={handleCheck}
-                  disabled={controller.isLocked}
-                  className="soft-button-primary"
-                >
-                  Check Circuit
-                </button>
-                {slots.map((slot) =>
-                  placements[slot.id] ? (
-                    <button
-                      key={slot.id}
-                      type="button"
-                      onClick={() => clearZone(slot.id)}
-                      className="soft-button-secondary"
-                    >
-                      Clear {slot.label}
-                    </button>
-                  ) : null,
+              <p className="absolute top-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 z-10 w-full text-center">
+                {slot.label}
+              </p>
+              
+              <AnimatePresence>
+                {part ? (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className={`mt-4 w-16 h-16 rounded-xl bg-gradient-to-br ${part.tone} shrink-0`}
+                  >
+                    {part.icon}
+                  </motion.div>
+                ) : (
+                  <div className="mt-4 text-xs text-slate-300 font-semibold">Drop Asset</div>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
+              </AnimatePresence>
+            </button>
+          );
+        })}
+      </div>
+      
+      {/* Visual Feedback Circuit Diagram */}
+      <div className="mt-4 p-8 rounded-[28px] bg-slate-800 text-center relative overflow-hidden">
+        {isWorking && (
+           <motion.div 
+             initial={{ opacity: 0 }} 
+             animate={{ opacity: [0.1, 0.4, 0.1] }} 
+             transition={{ duration: 1.5, repeat: Infinity }}
+             className="absolute inset-0 bg-yellow-400 mix-blend-overlay"
+           />
+        )}
+        <h3 className="text-xl font-bold text-white relative z-10">
+          {isWorking ? "⚡ The circuit is alive! Lamp is glowing." : "Circuit is incomplete."}
+        </h3>
       </div>
     </div>
+  );
+
+  return (
+    <SimulationCanvas
+      title="Circuit Builder"
+      goal="Build a closed circuit"
+      itemBankTitle="Components"
+      itemBankSubtitle="Physical Parts"
+      dropCanvasTitle="Bench"
+      dropCanvasSubtitle="Schematic Board"
+      itemBankContent={itemBankContent}
+      dropCanvasContent={dropCanvasContent}
+      goalStyle="bg-yellow-50 text-yellow-700 border-yellow-200"
+    />
   );
 }

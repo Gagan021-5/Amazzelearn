@@ -33,15 +33,12 @@ const sectorBuckets = [
 ];
 
 const sectorActivities = [
-  { id: "farming", label: "Farming", hint: "Growing wheat, rice, and vegetables", bucket: "primary" },
-  { id: "fishing", label: "Fishing", hint: "Catching fish from rivers and seas", bucket: "primary" },
-  { id: "mining", label: "Mining", hint: "Extracting coal, iron, and minerals", bucket: "primary" },
-  { id: "manufacturing", label: "Manufacturing", hint: "Making goods in factories", bucket: "secondary" },
-  { id: "weaving-garments", label: "Weaving & Garments", hint: "Turning cotton into clothing", bucket: "secondary" },
-  { id: "construction", label: "Construction", hint: "Building roads and houses", bucket: "secondary" },
-  { id: "banking", label: "Banking", hint: "Savings, loans, and financial services", bucket: "tertiary" },
-  { id: "transport", label: "Transport", hint: "Moving people and goods", bucket: "tertiary" },
-  { id: "teaching", label: "Teaching", hint: "Education and knowledge sharing", bucket: "tertiary" },
+  { id: "farming", label: "Farming", imgSrc: "/assets/images/economic-sectors/farming_icon_1776578825488.png", bucket: "primary" },
+  { id: "fishing", label: "Fishing", imgSrc: "/assets/images/economic-sectors/fishing_icon_1776579101758.png", bucket: "primary" },
+  { id: "manufacturing", label: "Manufacturing", imgSrc: "/assets/images/economic-sectors/manufacturing_icon_1776579134703.png", bucket: "secondary" },
+  { id: "textiles", label: "Textiles", imgSrc: "/assets/images/economic-sectors/textiles_icon_1776579149950.png", bucket: "secondary" },
+  { id: "banking", label: "Banking", imgSrc: "/assets/images/economic-sectors/banking_icon_1776579169385.png", bucket: "tertiary" },
+  { id: "teaching", label: "Teaching", imgSrc: "/assets/images/economic-sectors/teaching_icon_1776579185289.png", bucket: "tertiary" },
 ];
 
 export default function EconomicsSectorSort({ controller }) {
@@ -117,7 +114,7 @@ export default function EconomicsSectorSort({ controller }) {
           {placedCount}/{sectorActivities.length} sorted
         </p>
 
-        <div className="inventory-rail hide-scrollbar mt-6">
+        <div className="inventory-rail hide-scrollbar mt-6 grid grid-cols-2 gap-4">
           {sectorActivities.map((activity) => (
             <motion.button
               key={activity.id}
@@ -131,19 +128,21 @@ export default function EconomicsSectorSort({ controller }) {
               onDragEnd={() => setDraggedItemId(null)}
               onClick={() => handleSelect(activity.id)}
               disabled={controller.isLocked}
-              whileHover={{ scale: 1.02 }}
-              whileDrag={{ scale: 1.05, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.05 }}
+              whileDrag={{ scale: 1.1, boxShadow: "0px 10px 20px rgba(0,0,0,0.15)" }}
+              whileTap={{ scale: 0.95 }}
               className={[
-                "token-card text-left",
-                selectedItemId === activity.id ? "border-sky-300 ring-4 ring-sky-100" : "",
-                isPlaced(activity.id) ? "opacity-40 pointer-events-none" : "",
+                "flex flex-col items-center justify-center rounded-2xl bg-white p-3 shadow-md border-2 transition-all",
+                selectedItemId === activity.id ? "border-sky-400 ring-4 ring-sky-100" : "border-transparent",
+                isPlaced(activity.id) ? "opacity-30 pointer-events-none" : "",
               ].join(" ")}
             >
-              <p className="text-base font-semibold text-slate-900">
-                {activity.label}
-              </p>
-              <p className="mt-1.5 text-sm text-slate-500">{activity.hint}</p>
+              <img 
+                src={activity.imgSrc} 
+                alt={activity.label} 
+                className="w-full aspect-square object-contain drop-shadow-sm pointer-events-none rounded-lg"
+              />
+              {/* Optional: we can keep a tiny label underneath since user said "replace text entirely", but label often helps. I'll hide the text layer as requested. */}
             </motion.button>
           ))}
         </div>
@@ -157,7 +156,7 @@ export default function EconomicsSectorSort({ controller }) {
               Sorting Board
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-900">
-              Group each activity by sector
+              Group each tile by sector
             </h2>
           </div>
           <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
@@ -189,7 +188,7 @@ export default function EconomicsSectorSort({ controller }) {
                   }}
                   whileHover={{ scale: 1.01 }}
                   className={[
-                    "flex min-h-[320px] flex-col rounded-[26px] border-2 border-l-[6px] border-dashed p-5 text-left shadow-sm transition-all duration-300",
+                    "flex min-h-[360px] flex-col rounded-[26px] border-2 border-l-[6px] border-dashed p-5 text-left shadow-sm transition-all duration-300",
                     bucket.accent,
                     bucket.bgTint,
                     isDragOver
@@ -199,7 +198,7 @@ export default function EconomicsSectorSort({ controller }) {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${bucket.tone} shadow-md`}
+                      className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${bucket.tone} shadow-sm`}
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -210,60 +209,61 @@ export default function EconomicsSectorSort({ controller }) {
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0, opacity: 0 }}
-                              className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 shadow-md"
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow-sm"
                             >
-                              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none">
+                              <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none">
                                 <path d="M3 8l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </motion.div>
                           )}
                         </AnimatePresence>
                       </div>
-                      <p className="mt-1 text-sm text-slate-500">{bucket.description}</p>
+                      <p className="mt-1 text-xs text-slate-500">{bucket.description}</p>
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-1 flex-col gap-3">
+                  {/* Drop zone visual area */}
+                  <div className="mt-5 flex flex-1 flex-col gap-3 rounded-2xl bg-white/40 p-3">
                     <AnimatePresence mode="popLayout">
                       {buckets[bucket.id].length > 0 ? (
-                        buckets[bucket.id].map((activityId) => (
-                          <motion.div
-                            key={activityId}
-                            layout
-                            initial={{ scale: 0.85, opacity: 0, y: -8 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.85, opacity: 0, y: 8 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                            className="rounded-2xl bg-white px-5 py-4 text-base font-semibold text-slate-800 shadow-sm"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <span>{activityMap[activityId].label}</span>
-                              <span
-                                role="button"
-                                tabIndex={0}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  removeItem(activityId);
-                                }}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    removeItem(activityId);
-                                  }
-                                }}
-                                className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 transition hover:bg-red-50 hover:text-red-600 hover:ring-red-200"
+                        <div className="grid grid-cols-2 gap-3 place-items-center w-full">
+                          {buckets[bucket.id].map((activityId) => {
+                            const activity = activityMap[activityId];
+                            return (
+                              <motion.div
+                                key={activityId}
+                                layout
+                                initial={{ scale: 0.5, opacity: 0, y: -10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.5, opacity: 0, y: 10 }}
+                                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                                className="relative group w-full max-w-[120px] aspect-square rounded-2xl bg-white p-3 shadow-md"
                               >
-                                Remove
-                              </span>
-                            </div>
-                          </motion.div>
-                        ))
+                                <img 
+                                  src={activity.imgSrc} 
+                                  alt={activity.label} 
+                                  className="w-full h-full object-contain pointer-events-none rounded-lg"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    removeItem(activityId);
+                                  }}
+                                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:bg-red-500 hover:text-white"
+                                >
+                                  ×
+                                </button>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       ) : (
                         <motion.div
                           layout
-                          className="flex flex-1 items-center justify-center rounded-[22px] border-2 border-dashed border-slate-200 bg-white/60 p-6 text-center text-sm font-semibold text-slate-400"
+                          className="flex flex-1 items-center justify-center rounded-[18px] border-2 border-dashed border-slate-200/50 bg-white/50 p-6 text-center text-sm font-semibold text-slate-400"
                         >
-                          Drop cards here
+                          Drop image tiles here
                         </motion.div>
                       )}
                     </AnimatePresence>
