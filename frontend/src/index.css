@@ -103,8 +103,8 @@ body,
   }
 
   .panel-card {
-    @apply rounded-2xl border border-slate-100 bg-white;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+    @apply rounded-3xl border border-slate-100/80 bg-white;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
   }
 
   /* Buttons */
@@ -124,6 +124,15 @@ body,
     @apply btn-pill text-slate-600 hover:bg-slate-50 hover:text-slate-900;
   }
 
+  /* Soft buttons (simulation actions) */
+  .soft-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amazze-purple-500 to-amazze-purple-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-amazze-purple-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amazze-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+
+  .soft-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200/80 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   /* Badges */
   .badge-amazze {
     @apply inline-flex items-center gap-1.5 rounded-full bg-amazze-purple-50 px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-amazze-purple-600 ring-1 ring-amazze-purple-100;
@@ -135,25 +144,64 @@ body,
     box-shadow: inset 0 2px 4px rgba(15,23,42,0.06);
   }
 
-  /* Token cards (drag items) */
-  .token-card {
-    @apply rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-left transition-all duration-300 hover:-translate-y-1 hover:border-amazze-purple-200 hover:shadow-lg hover:shadow-amazze-purple-500/10;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+  /* ── Simulation Layout System ── */
+
+  .sim-layout {
+    @apply mx-auto grid min-h-[75vh] max-w-7xl gap-6;
+    grid-template-columns: 1fr;
   }
 
-  /* Inventory scroll rail */
+  /* Item bank (side panel for draggable items) */
+  .item-bank {
+    @apply rounded-3xl border border-slate-100/80 bg-white p-6;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+  }
+
+  /* Drop canvas (main area for drop zones) */
+  .drop-canvas {
+    @apply rounded-3xl border border-slate-100/80 bg-white p-6;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+  }
+
+  /* Token cards — Chunky draggable items */
+  .token-card {
+    @apply rounded-2xl border-2 border-slate-200/80 bg-white px-5 py-4 text-left transition-all duration-300 cursor-grab active:cursor-grabbing;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.06);
+  }
+
+  .token-card:hover {
+    @apply -translate-y-1 border-amazze-purple-200 shadow-lg shadow-amazze-purple-500/10;
+  }
+
+  .token-card:active {
+    @apply scale-[1.03] shadow-xl shadow-amazze-purple-500/15;
+  }
+
+  /* Inventory rail — item tray */
   .inventory-rail {
-    @apply flex gap-3 overflow-x-auto pb-2;
+    @apply flex gap-3 overflow-x-auto pb-3;
   }
 
   .inventory-rail > * {
-    @apply min-w-[15.5rem] shrink-0;
+    @apply min-w-[16rem] shrink-0;
   }
 
-  /* Drop slots */
+  /* Drop slots — spacious drop targets */
   .drop-slot {
-    @apply flex min-h-[132px] items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/60 bg-slate-50/50 p-4 text-center transition-all duration-300 hover:border-amazze-purple-300 hover:bg-amazze-purple-50/30;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+    @apply flex min-h-[160px] items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/60 bg-slate-50/50 p-5 text-center transition-all duration-300;
+    box-shadow: inset 0 2px 6px rgba(15,23,42,0.03);
+  }
+
+  .drop-slot:hover {
+    @apply border-amazze-purple-300 bg-amazze-purple-50/30;
+    box-shadow: inset 0 2px 8px rgba(139,92,246,0.06);
+  }
+
+  /* Drag-over highlight (apply via JS className toggle) */
+  .drop-slot-active,
+  .drop-zone-active {
+    @apply border-amazze-purple-400 bg-amazze-purple-50/40 ring-4 ring-amazze-purple-100/60;
+    box-shadow: inset 0 2px 12px rgba(139,92,246,0.10);
   }
 
   /* Status pills */
@@ -170,15 +218,25 @@ body,
   }
 }
 
-/* ── Desktop breakpoint: inventory grid ── */
+/* ── Desktop breakpoint: simulation layout ── */
 
 @media (min-width: 1024px) {
+  .sim-layout {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
   .inventory-rail {
-    @apply grid overflow-visible pb-0;
+    @apply grid grid-cols-1 gap-3.5 overflow-visible pb-0;
   }
 
   .inventory-rail > * {
     @apply min-w-0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .sim-layout {
+    grid-template-columns: 380px minmax(0, 1fr);
   }
 }
 

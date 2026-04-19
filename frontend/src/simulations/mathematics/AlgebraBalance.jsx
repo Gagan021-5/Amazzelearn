@@ -39,11 +39,11 @@ export default function AlgebraBalance({ controller }) {
         weights.map((weight, index) => [
           weight,
           [
-            "from-orange-300 to-amber-400",
-            "from-sky-300 to-cyan-300",
-            "from-emerald-300 to-teal-400",
-            "from-violet-300 to-fuchsia-400",
-            "from-rose-300 to-orange-400",
+            "from-orange-400 to-amber-500",
+            "from-sky-400 to-cyan-500",
+            "from-emerald-400 to-teal-500",
+            "from-violet-400 to-fuchsia-500",
+            "from-rose-400 to-orange-500",
           ][index],
         ]),
       ),
@@ -76,16 +76,17 @@ export default function AlgebraBalance({ controller }) {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <div className="panel-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="sim-layout">
+      {/* ─── Item Bank ─── */}
+      <div className="item-bank">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Weight Bank
         </p>
-        <h2 className="mt-2 text-2xl font-bold">Choose numbered weights</h2>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900">Choose numbered weights</h2>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           {weights.map((weight) => (
-            <button
+            <motion.button
               key={weight}
               type="button"
               draggable={!controller.isLocked}
@@ -97,27 +98,30 @@ export default function AlgebraBalance({ controller }) {
               onDragEnd={() => setDraggedItemId(null)}
               onClick={() => handleSelect(weight)}
               disabled={controller.isLocked}
+              whileHover={{ scale: 1.04 }}
+              whileDrag={{ scale: 1.08, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
+              whileTap={{ scale: 0.96 }}
               className={[
-                "token-card flex h-24 items-center justify-center text-center",
+                "token-card flex h-28 items-center justify-center text-center",
                 selectedItemId === weight
                   ? "border-sky-300 ring-4 ring-sky-100"
                   : "",
-                isPlaced(weight) ? "opacity-55" : "",
+                isPlaced(weight) ? "opacity-40 pointer-events-none" : "",
               ].join(" ")}
             >
               <div>
                 <div
-                  className={`mx-auto h-12 w-12 rounded-2xl bg-gradient-to-br ${weightStyles[weight]}`}
+                  className={`mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br ${weightStyles[weight]} shadow-md`}
                 />
-                <p className="mt-2 text-lg font-bold text-slate-900">{weight}</p>
+                <p className="mt-3 text-xl font-bold text-slate-900">{weight}</p>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
 
-        <div className="mt-6 rounded-[24px] bg-slate-50 p-4">
+        <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
           <p className="text-sm font-semibold text-slate-900">Equation target</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-500">
             Solve <span className="font-bold text-slate-900">x + 2 = 5</span> by
             placing the correct x-value on the left pan and the matching total
             on the right pan.
@@ -125,28 +129,29 @@ export default function AlgebraBalance({ controller }) {
         </div>
       </div>
 
-      <div className="panel-card p-5">
+      {/* ─── Drop Canvas ─── */}
+      <div className="drop-canvas">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Algebra Stage
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Interactive balancing scale</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Interactive balancing scale</h2>
           </div>
           <motion.div
             animate={{
               backgroundColor: solved ? "rgb(240 253 244)" : "rgb(255 247 237)",
               color: solved ? "rgb(21 128 61)" : "rgb(194 65 12)",
             }}
-            className="rounded-full px-4 py-2 text-sm font-semibold"
+            className="rounded-full px-5 py-2.5 text-sm font-semibold"
           >
             Left: {leftValue} | Right: {rightValue}
           </motion.div>
         </div>
 
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(180deg,#fff7ed_0%,#ffffff_56%,#eef6ff_100%)] p-4 sm:p-6">
+        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_50%,#eef6ff_100%)] p-5 sm:p-6">
           <div className="overflow-x-auto pb-2">
-            <div className="relative min-h-[400px] min-w-[560px] overflow-hidden rounded-[26px] border border-white/70 bg-white/85 p-4">
+            <div className="relative min-h-[420px] min-w-[560px] overflow-hidden rounded-[26px] border border-white/70 bg-white/85 p-4">
               {/* ── Sparkle effect on solve ── */}
               <AnimatePresence>
                 {(solved || controller.status === "success") && (
@@ -182,7 +187,7 @@ export default function AlgebraBalance({ controller }) {
                 )}
               </AnimatePresence>
 
-              {/* ── Scale base — wood-textured platform ── */}
+              {/* ── Scale base ── */}
               <div className="absolute bottom-0 left-1/2 h-28 w-24 -translate-x-1/2 rounded-t-[36px] bg-gradient-to-b from-amber-200 to-amber-400 shadow-inner" />
               <div className="absolute bottom-24 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[70px] border-r-[70px] border-b-[110px] border-l-transparent border-r-transparent border-b-amber-600/80" />
 
@@ -212,16 +217,16 @@ export default function AlgebraBalance({ controller }) {
                     }}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex h-32 w-44 flex-col items-center justify-center rounded-[28px] border-2 border-dashed border-slate-300 bg-white/95 px-4 py-3 shadow-lg"
+                    className="flex h-36 w-48 flex-col items-center justify-center rounded-[28px] border-2 border-dashed border-slate-300 bg-white/95 px-5 py-4 shadow-lg"
                   >
-                    <div className="mb-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="mb-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                       x + 2
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white">
+                      <div className="rounded-2xl bg-slate-900 px-5 py-3.5 text-base font-bold text-white">
                         {placements["x-slot"] || "x"}
                       </div>
-                      <div className="rounded-2xl bg-amber-100 px-4 py-3 text-sm font-bold text-amber-800">
+                      <div className="rounded-2xl bg-amber-100 px-5 py-3.5 text-base font-bold text-amber-800">
                         +2
                       </div>
                     </div>
@@ -242,12 +247,12 @@ export default function AlgebraBalance({ controller }) {
                     }}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex h-32 w-44 flex-col items-center justify-center rounded-[28px] border-2 border-dashed border-slate-300 bg-white/95 px-4 py-3 shadow-lg"
+                    className="flex h-36 w-48 flex-col items-center justify-center rounded-[28px] border-2 border-dashed border-slate-300 bg-white/95 px-5 py-4 shadow-lg"
                   >
-                    <div className="mb-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="mb-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                       Right pan
                     </div>
-                    <div className="rounded-2xl bg-sky-100 px-5 py-3 text-sm font-bold text-sky-800">
+                    <div className="rounded-2xl bg-sky-100 px-6 py-3.5 text-base font-bold text-sky-800">
                       {placements["right-slot"] || "?"}
                     </div>
                   </motion.button>
@@ -256,7 +261,7 @@ export default function AlgebraBalance({ controller }) {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleCheck}

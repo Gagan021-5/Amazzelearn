@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSinglePlacementGame } from "../../hooks/useSinglePlacementGame";
 
@@ -19,10 +19,10 @@ const samples = [
   {
     id: "water",
     label: "Distilled Water",
-    formula: "H2O",
+    formula: "H₂O",
     role: "Neutral solvent",
     note: "Useful for dissolving samples or making solutions.",
-    tone: "from-sky-300 to-cyan-400",
+    tone: "from-sky-400 to-cyan-500",
   },
   {
     id: "nacl",
@@ -30,7 +30,7 @@ const samples = [
     formula: "NaCl",
     role: "Ionic solid",
     note: "Table salt. In water it dissolves, but it does not become NaOH.",
-    tone: "from-slate-300 to-slate-500",
+    tone: "from-slate-400 to-slate-600",
   },
   {
     id: "hcl",
@@ -38,7 +38,7 @@ const samples = [
     formula: "HCl",
     role: "Strong acid",
     note: "Neutralizes sodium hydroxide to form salt and water.",
-    tone: "from-rose-300 to-orange-400",
+    tone: "from-rose-400 to-orange-500",
   },
   {
     id: "naoh",
@@ -46,39 +46,39 @@ const samples = [
     formula: "NaOH",
     role: "Strong base",
     note: "Reactant used in neutralization reactions.",
-    tone: "from-emerald-300 to-teal-400",
+    tone: "from-emerald-400 to-teal-500",
   },
   {
     id: "agno3",
     label: "Silver Nitrate",
-    formula: "AgNO3",
+    formula: "AgNO₃",
     role: "Precipitation reagent",
     note: "Forms a white precipitate with chloride ions.",
-    tone: "from-violet-300 to-fuchsia-400",
+    tone: "from-violet-400 to-fuchsia-500",
   },
   {
     id: "nahco3",
     label: "Sodium Bicarbonate",
-    formula: "NaHCO3",
+    formula: "NaHCO₃",
     role: "Carbonate base",
     note: "Reacts with acids to release carbon dioxide gas.",
-    tone: "from-amber-300 to-yellow-400",
+    tone: "from-amber-400 to-yellow-500",
   },
   {
     id: "ch3cooh",
     label: "Acetic Acid",
-    formula: "CH3COOH",
+    formula: "CH₃COOH",
     role: "Weak acid",
     note: "Vinegar acid that bubbles strongly with bicarbonate.",
-    tone: "from-orange-300 to-amber-500",
+    tone: "from-orange-400 to-amber-600",
   },
 ];
 
 const reactionCatalog = {
   "agno3|nacl": {
     title: "Precipitation Reaction",
-    equation: "AgNO3(aq) + NaCl(aq) -> AgCl(s) + NaNO3(aq)",
-    products: ["AgCl(s)", "NaNO3(aq)"],
+    equation: "AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)",
+    products: ["AgCl(s)", "NaNO₃(aq)"],
     observation: "A cloudy white silver chloride precipitate forms immediately.",
     evidence: "A solid appears in the liquid, showing a precipitation reaction.",
     fill: "#d8b4fe",
@@ -87,13 +87,13 @@ const reactionCatalog = {
     precipitate: true,
     success: false,
     feedback:
-      "This is a correct reaction, but it does not make the target products NaCl and H2O.",
+      "This is a correct reaction, but it does not make the target products NaCl and H₂O.",
   },
   "ch3cooh|nahco3": {
     title: "Gas Evolution",
     equation:
-      "CH3COOH(aq) + NaHCO3(s) -> CH3COONa(aq) + H2O(l) + CO2(g)",
-    products: ["CH3COONa(aq)", "H2O(l)", "CO2(g)"],
+      "CH₃COOH(aq) + NaHCO₃(s) → CH₃COONa(aq) + H₂O(l) + CO₂(g)",
+    products: ["CH₃COONa(aq)", "H₂O(l)", "CO₂(g)"],
     observation: "Fizzing occurs as carbon dioxide gas escapes.",
     evidence: "Visible bubbles show that a gas is being formed.",
     fill: "#fcd34d",
@@ -106,8 +106,8 @@ const reactionCatalog = {
   },
   "hcl|naoh": {
     title: "Neutralization",
-    equation: "HCl(aq) + NaOH(aq) -> NaCl(aq) + H2O(l)",
-    products: ["NaCl(aq)", "H2O(l)"],
+    equation: "HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l)",
+    products: ["NaCl(aq)", "H₂O(l)"],
     observation:
       "The acid and base neutralize each other, producing salt and water.",
     evidence:
@@ -122,8 +122,8 @@ const reactionCatalog = {
   },
   "hcl|water": {
     title: "Acid Dilution",
-    equation: "HCl(aq) + H2O(l) -> H3O+(aq) + Cl-(aq)",
-    products: ["H3O+(aq)", "Cl-(aq)"],
+    equation: "HCl(aq) + H₂O(l) → H₃O⁺(aq) + Cl⁻(aq)",
+    products: ["H₃O⁺(aq)", "Cl⁻(aq)"],
     observation: "The acid becomes more dilute, but the mixture remains acidic.",
     evidence: "There is no neutralization because no base is present.",
     fill: "#fda4af",
@@ -132,12 +132,12 @@ const reactionCatalog = {
     precipitate: false,
     success: false,
     feedback:
-      "Water dilutes hydrochloric acid, but it does not produce NaCl and H2O as products.",
+      "Water dilutes hydrochloric acid, but it does not produce NaCl and H₂O as products.",
   },
   "nacl|water": {
     title: "Dissolution",
-    equation: "NaCl(s) -> Na+(aq) + Cl-(aq) in H2O",
-    products: ["Na+(aq)", "Cl-(aq)", "H2O(l)"],
+    equation: "NaCl(s) → Na⁺(aq) + Cl⁻(aq) in H₂O",
+    products: ["Na⁺(aq)", "Cl⁻(aq)", "H₂O(l)"],
     observation:
       "The salt dissolves to make a salt solution. No new base appears.",
     evidence:
@@ -152,8 +152,8 @@ const reactionCatalog = {
   },
   "naoh|water": {
     title: "Base Dissolution",
-    equation: "NaOH(s) -> Na+(aq) + OH-(aq) in H2O",
-    products: ["Na+(aq)", "OH-(aq)", "H2O(l)"],
+    equation: "NaOH(s) → Na⁺(aq) + OH⁻(aq) in H₂O",
+    products: ["Na⁺(aq)", "OH⁻(aq)", "H₂O(l)"],
     observation: "The solid dissolves and the solution stays strongly basic.",
     evidence: "A base dissolved, but the solution is not neutralized.",
     fill: "#86efac",
@@ -173,7 +173,7 @@ const emptyOutcome = {
   observation:
     "This bench models accurate outcomes such as dissolution, neutralization, precipitation, and gas evolution.",
   evidence:
-    "Target experiment: produce NaCl(aq) and H2O(l) by choosing the correct acid-base pair.",
+    "Target experiment: produce NaCl(aq) and H₂O(l) by choosing the correct acid-base pair.",
   fill: "#bfdbfe",
   glow: "rgba(59,130,246,0.18)",
   bubbles: false,
@@ -225,6 +225,8 @@ export default function ChemistryLab({ controller }) {
     controller.sessionId,
   );
 
+  const [dragOverSlot, setDragOverSlot] = useState(null);
+
   const firstSample = placements["sample-a"];
   const secondSample = placements["sample-b"];
 
@@ -250,6 +252,7 @@ export default function ChemistryLab({ controller }) {
 
     controller.clearFeedback();
     placeItem(slotId, itemId);
+    setDragOverSlot(null);
   };
 
   const handleCheck = () => {
@@ -275,37 +278,38 @@ export default function ChemistryLab({ controller }) {
   const liquidRaised = Boolean(firstSample && secondSample);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <div className="panel-card p-5">
+    <div className="sim-layout">
+      {/* ─── Item Bank ─── */}
+      <div className="item-bank">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Sample Bank
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Chemistry reaction bench</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Chemistry reaction bench</h2>
           </div>
           <div className="rounded-2xl bg-emerald-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
               Lab goal
             </p>
             <p className="mt-1 text-sm font-bold text-emerald-900">
-              Make NaCl(aq) + H2O(l)
+              Make NaCl(aq) + H₂O(l)
             </p>
           </div>
         </div>
 
-        <div className="mt-5 rounded-[24px] bg-slate-50 p-4">
+        <div className="mt-5 rounded-[24px] bg-slate-50 p-5">
           <p className="text-sm font-semibold text-slate-900">Accuracy note</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-500">
             Sodium chloride added to water makes a salt solution. It does not
             produce sodium hydroxide. The target products come from a real
             neutralization reaction instead.
           </p>
         </div>
 
-        <div className="inventory-rail hide-scrollbar mt-5">
+        <div className="inventory-rail hide-scrollbar mt-6">
           {samples.map((sample) => (
-            <button
+            <motion.button
               key={sample.id}
               type="button"
               draggable={!controller.isLocked}
@@ -317,50 +321,54 @@ export default function ChemistryLab({ controller }) {
               onDragEnd={() => setDraggedItemId(null)}
               onClick={() => handleSelect(sample.id)}
               disabled={controller.isLocked}
+              whileHover={{ scale: 1.02 }}
+              whileDrag={{ scale: 1.05, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
+              whileTap={{ scale: 0.97 }}
               className={[
                 "token-card h-full",
                 selectedItemId === sample.id
                   ? "border-sky-300 ring-4 ring-sky-100"
                   : "",
-                isPlaced(sample.id) ? "opacity-55" : "",
+                isPlaced(sample.id) ? "opacity-40 pointer-events-none" : "",
               ].join(" ")}
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`mt-1 h-11 w-11 rounded-2xl bg-gradient-to-br ${sample.tone}`}
+                  className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${sample.tone} shadow-md`}
                 />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-base font-semibold text-slate-900">
                     {sample.label}
                   </p>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     {sample.formula}
                   </p>
-                  <p className="mt-2 text-xs font-semibold text-sky-700">
+                  <p className="mt-1.5 text-xs font-semibold text-sky-700">
                     {sample.role}
                   </p>
-                  <p className="mt-2 text-sm text-slate-600">{sample.note}</p>
+                  <p className="mt-1.5 text-sm text-slate-500">{sample.note}</p>
                 </div>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <div className="panel-card p-5">
+      {/* ─── Drop Canvas ─── */}
+      <div className="drop-canvas">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Lab Table
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Mix two samples and inspect the result</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Mix two samples and inspect the result</h2>
           </div>
           <div className="status-pill bg-sky-50 text-sky-700">
             Choose two reagents, then check the reaction
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(180deg,#eff8ff_0%,#ffffff_50%,#fef9ec_100%)] p-4 sm:p-6">
+        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#eff8ff_0%,#ffffff_45%,#fef9ec_100%)] p-5 sm:p-6">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
@@ -368,6 +376,7 @@ export default function ChemistryLab({ controller }) {
                   const sample = placements[slot.id]
                     ? sampleMap[placements[slot.id]]
                     : null;
+                  const isDragOver = dragOverSlot === slot.id;
 
                   return (
                     <button
@@ -375,7 +384,11 @@ export default function ChemistryLab({ controller }) {
                       type="button"
                       disabled={controller.isLocked}
                       onClick={() => handlePlace(slot.id, selectedItemId)}
-                      onDragOver={(event) => event.preventDefault()}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setDragOverSlot(slot.id);
+                      }}
+                      onDragLeave={() => setDragOverSlot(null)}
                       onDrop={(event) => {
                         event.preventDefault();
                         handlePlace(slot.id, selectedItemId);
@@ -383,26 +396,27 @@ export default function ChemistryLab({ controller }) {
                       className={[
                         "drop-slot text-left",
                         sample ? "border-sky-200 bg-sky-50/60" : "",
+                        isDragOver ? "drop-slot-active" : "",
                       ].join(" ")}
                     >
                       {sample ? (
                         <div className="flex items-start gap-3 text-left">
                           <div
-                            className={`mt-1 h-11 w-11 rounded-2xl bg-gradient-to-br ${sample.tone}`}
+                            className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${sample.tone} shadow-md`}
                           />
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">
+                            <p className="text-sm font-semibold text-slate-500">
                               {slot.label}
                             </p>
-                            <p className="mt-2 text-base font-bold text-slate-900">
+                            <p className="mt-2 text-lg font-bold text-slate-900">
                               {sample.formula}
                             </p>
-                            <p className="text-sm text-slate-600">{sample.label}</p>
+                            <p className="text-sm text-slate-500">{sample.label}</p>
                           </div>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">
+                          <p className="text-base font-semibold text-slate-800">
                             {slot.label}
                           </p>
                           <p className="mt-2 text-sm text-slate-500">{slot.hint}</p>
@@ -413,13 +427,13 @@ export default function ChemistryLab({ controller }) {
                 })}
               </div>
 
-              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-4 sm:p-6">
+              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Reaction Vessel
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-slate-500">
                       Watch the outcome update as soon as two samples are in the beakers.
                     </p>
                   </div>
@@ -512,7 +526,6 @@ export default function ChemistryLab({ controller }) {
                             repeat: liquidRaised ? Infinity : 0,
                           }}
                         />
-                        {/* Celebration glow ring on correct reaction */}
                         {(outcome.success || controller.status === "success") && (
                           <motion.circle
                             cx="160"
@@ -560,48 +573,48 @@ export default function ChemistryLab({ controller }) {
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="panel-card p-4"
+                        className="panel-card p-5"
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                           Balanced equation
                         </p>
                         <p className="mt-3 text-sm font-semibold text-slate-900">
                           {outcome.equation}
                         </p>
-                        <p className="mt-3 text-sm text-slate-600">
+                        <p className="mt-3 text-sm text-slate-500">
                           {outcome.observation}
                         </p>
                       </motion.div>
                     </AnimatePresence>
 
-                    <div className="panel-card p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="panel-card p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Evidence and products
                       </p>
-                      <p className="mt-3 text-sm text-slate-600">{outcome.evidence}</p>
+                      <p className="mt-3 text-sm text-slate-500">{outcome.evidence}</p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {outcome.products.length > 0 ? (
                           outcome.products.map((product) => (
                             <span
                               key={product}
-                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"
+                              className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700"
                             >
                               {product}
                             </span>
                           ))
                         ) : (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                          <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
                             Products will appear once two samples are placed.
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="panel-card p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="panel-card p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                         Teacher prompt
                       </p>
-                      <p className="mt-3 text-sm text-slate-600">
+                      <p className="mt-3 text-sm text-slate-500">
                         Find the pair that really makes sodium chloride and water.
                         A clear solution can still be meaningful chemistry when it
                         comes from neutralization.
@@ -613,11 +626,11 @@ export default function ChemistryLab({ controller }) {
             </div>
 
             <div className="space-y-4">
-              <div className="panel-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="panel-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Current setup
                 </p>
-                <div className="mt-3 grid gap-3">
+                <div className="mt-4 grid gap-3">
                   {slotConfig.map((slot) => {
                     const sample = placements[slot.id]
                       ? sampleMap[placements[slot.id]]
@@ -625,7 +638,7 @@ export default function ChemistryLab({ controller }) {
 
                     return (
                       <div key={slot.id} className="rounded-2xl bg-slate-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                           {slot.label}
                         </p>
                         <p className="mt-2 text-sm font-semibold text-slate-900">

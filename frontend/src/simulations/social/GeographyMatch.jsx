@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useSinglePlacementGame } from "../../hooks/useSinglePlacementGame";
 
@@ -12,7 +12,6 @@ const continents = [
     id: "north-america",
     label: "North America",
     description: "Ice cap to tropical Mexico",
-    /* Simplified silhouette path */
     shape:
       "M60 60l30-12 28 6 12 20-8 32 24 18-6 28-22 14-20-6-30 8-28-16 10-30 10-24Z",
     dropTop: "top-[30%]",
@@ -88,6 +87,8 @@ export default function GeographyMatch({ controller }) {
     controller.sessionId,
   );
 
+  const [dragOverZone, setDragOverZone] = useState(null);
+
   const continentMap = useMemo(
     () => Object.fromEntries(continents.map((c) => [c.id, c])),
     [],
@@ -111,6 +112,7 @@ export default function GeographyMatch({ controller }) {
 
     controller.clearFeedback();
     placeItem(zoneId, itemId);
+    setDragOverZone(null);
   };
 
   const handleCheck = () => {
@@ -135,18 +137,19 @@ export default function GeographyMatch({ controller }) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <div className="panel-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="sim-layout">
+      {/* ─── Item Bank ─── */}
+      <div className="item-bank">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Continent Labels
         </p>
-        <h2 className="mt-2 text-2xl font-bold">Drag onto the map</h2>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900">Drag onto the map</h2>
         <p className="mt-2 text-sm text-slate-500">
           {placedCount}/{continents.length} placed
         </p>
-        <div className="inventory-rail hide-scrollbar mt-5">
+        <div className="inventory-rail hide-scrollbar mt-6">
           {continents.map((continent) => (
-            <button
+            <motion.button
               key={continent.id}
               type="button"
               draggable={!controller.isLocked}
@@ -158,35 +161,39 @@ export default function GeographyMatch({ controller }) {
               onDragEnd={() => setDraggedItemId(null)}
               onClick={() => handleSelect(continent.id)}
               disabled={controller.isLocked}
+              whileHover={{ scale: 1.02 }}
+              whileDrag={{ scale: 1.05, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
+              whileTap={{ scale: 0.97 }}
               className={[
                 "token-card text-left",
                 selectedItemId === continent.id
                   ? "border-sky-300 ring-4 ring-sky-100"
                   : "",
-                isPlaced(continent.id) ? "opacity-55" : "",
+                isPlaced(continent.id) ? "opacity-40 pointer-events-none" : "",
               ].join(" ")}
             >
-              <p className="text-sm font-semibold text-slate-900">{continent.label}</p>
-              <p className="mt-2 text-sm text-slate-600">{continent.description}</p>
-            </button>
+              <p className="text-base font-semibold text-slate-900">{continent.label}</p>
+              <p className="mt-1.5 text-sm text-slate-500">{continent.description}</p>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <div className="panel-card p-5">
+      {/* ─── Drop Canvas ─── */}
+      <div className="drop-canvas">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               World Atlas
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Match the continents</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Match the continents</h2>
           </div>
           <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
             Drag labels onto the matching continent shapes
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(180deg,#ecfdf5_0%,#ffffff_52%,#eff6ff_100%)] p-4 sm:p-6">
+        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#ecfdf5_0%,#ffffff_52%,#eff6ff_100%)] p-5 sm:p-6">
           <div className="overflow-x-auto pb-2">
             <div className="relative min-h-[480px] min-w-[700px] overflow-hidden rounded-[26px] border border-white/70 bg-white/90 p-4">
               {/* Background gradient */}
@@ -230,49 +237,59 @@ export default function GeographyMatch({ controller }) {
               </svg>
 
               {/* Drop zone buttons */}
-              {continents.map((continent) => (
-                <motion.button
-                  key={continent.id}
-                  type="button"
-                  disabled={controller.isLocked}
-                  onClick={() => handlePlace(continent.id, selectedItemId)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    handlePlace(continent.id, selectedItemId);
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.96 }}
-                  className={`absolute ${continent.dropTop} ${continent.dropLeft} flex min-h-[56px] min-w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[18px] border-2 border-dashed px-3 py-2 text-center shadow-sm transition ${
-                    placements[continent.id]
-                      ? "border-emerald-300 bg-emerald-50/90"
-                      : "border-slate-300 bg-white/90 hover:border-sky-300"
-                  }`}
-                >
-                  {placements[continent.id] ? (
-                    <motion.div
-                      initial={{ scale: 0.85, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                    >
-                      <p className="text-sm font-semibold text-slate-900">
-                        {continentMap[placements[continent.id]].label}
+              {continents.map((continent) => {
+                const isDragOver = dragOverZone === continent.id;
+
+                return (
+                  <motion.button
+                    key={continent.id}
+                    type="button"
+                    disabled={controller.isLocked}
+                    onClick={() => handlePlace(continent.id, selectedItemId)}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setDragOverZone(continent.id);
+                    }}
+                    onDragLeave={() => setDragOverZone(null)}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      handlePlace(continent.id, selectedItemId);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.96 }}
+                    className={`absolute ${continent.dropTop} ${continent.dropLeft} flex min-h-[60px] min-w-[120px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[18px] border-2 border-dashed px-4 py-3 text-center shadow-sm transition-all duration-300 ${
+                      placements[continent.id]
+                        ? "border-emerald-300 bg-emerald-50/90"
+                        : isDragOver
+                          ? "border-amazze-purple-400 bg-amazze-purple-50/60 ring-4 ring-amazze-purple-100/60"
+                          : "border-slate-300 bg-white/90 hover:border-sky-300"
+                    }`}
+                  >
+                    {placements[continent.id] ? (
+                      <motion.div
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                      >
+                        <p className="text-sm font-semibold text-slate-900">
+                          {continentMap[placements[continent.id]].label}
+                        </p>
+                        <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-emerald-600">
+                          placed
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Drop label
                       </p>
-                      <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-emerald-600">
-                        placed
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Drop label
-                    </p>
-                  )}
-                </motion.button>
-              ))}
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleCheck}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSinglePlacementGame } from "../../hooks/useSinglePlacementGame";
 
@@ -31,49 +31,49 @@ const parts = [
     label: "Battery Cell",
     short: "1.5 V source",
     note: "Provides the push that drives current around the circuit.",
-    tone: "from-rose-400 to-orange-400",
+    tone: "from-rose-400 to-orange-500",
   },
   {
     id: "copper-wire",
     label: "Copper Wire",
     short: "Conductor",
     note: "Lets electric charge move easily through the path.",
-    tone: "from-amber-300 to-yellow-400",
+    tone: "from-amber-400 to-yellow-500",
   },
   {
     id: "plastic-strip",
     label: "Plastic Strip",
     short: "Insulator",
     note: "Blocks the current because plastic is an electrical insulator.",
-    tone: "from-slate-300 to-slate-500",
+    tone: "from-slate-400 to-slate-600",
   },
   {
     id: "closed-switch",
     label: "Closed Switch",
     short: "Path connected",
     note: "Completes the conducting path so current can flow.",
-    tone: "from-emerald-300 to-teal-400",
+    tone: "from-emerald-400 to-teal-500",
   },
   {
     id: "open-switch",
     label: "Open Switch",
     short: "Path broken",
     note: "Leaves a gap in the circuit, so no current flows.",
-    tone: "from-sky-300 to-cyan-400",
+    tone: "from-sky-400 to-cyan-500",
   },
   {
     id: "bulb",
     label: "Lamp Bulb",
     short: "Light output",
     note: "Glows when electrical energy reaches the filament.",
-    tone: "from-yellow-300 to-orange-400",
+    tone: "from-yellow-400 to-orange-500",
   },
   {
     id: "buzzer",
     label: "Buzzer",
     short: "Sound output",
     note: "Would make sound in a closed circuit, but it does not light a lamp.",
-    tone: "from-violet-300 to-fuchsia-400",
+    tone: "from-violet-400 to-fuchsia-500",
   },
 ];
 
@@ -173,6 +173,8 @@ export default function CircuitBuilder({ controller }) {
     controller.sessionId,
   );
 
+  const [dragOverSlot, setDragOverSlot] = useState(null);
+
   const partMap = useMemo(
     () => Object.fromEntries(parts.map((part) => [part.id, part])),
     [],
@@ -192,6 +194,7 @@ export default function CircuitBuilder({ controller }) {
 
     controller.clearFeedback();
     placeItem(slotId, itemId);
+    setDragOverSlot(null);
   };
 
   const handleCheck = () => {
@@ -218,14 +221,15 @@ export default function CircuitBuilder({ controller }) {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <div className="panel-card p-5">
+    <div className="sim-layout">
+      {/* ─── Item Bank ─── */}
+      <div className="item-bank">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Component Tray
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Closed circuit workbench</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Closed circuit workbench</h2>
           </div>
           <div className="rounded-2xl bg-indigo-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">
@@ -237,9 +241,9 @@ export default function CircuitBuilder({ controller }) {
           </div>
         </div>
 
-        <div className="inventory-rail hide-scrollbar mt-5">
+        <div className="inventory-rail hide-scrollbar mt-6">
           {parts.map((part) => (
-            <button
+            <motion.button
               key={part.id}
               type="button"
               draggable={!controller.isLocked}
@@ -251,40 +255,44 @@ export default function CircuitBuilder({ controller }) {
               onDragEnd={() => setDraggedItemId(null)}
               onClick={() => handleSelect(part.id)}
               disabled={controller.isLocked}
+              whileHover={{ scale: 1.02 }}
+              whileDrag={{ scale: 1.05, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
+              whileTap={{ scale: 0.97 }}
               className={[
                 "token-card h-full",
                 selectedItemId === part.id
                   ? "border-sky-300 ring-4 ring-sky-100"
                   : "",
-                isPlaced(part.id) ? "opacity-55" : "",
+                isPlaced(part.id) ? "opacity-40 pointer-events-none" : "",
               ].join(" ")}
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`mt-1 h-11 w-11 rounded-2xl bg-gradient-to-br ${part.tone}`}
+                  className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${part.tone} shadow-md`}
                 />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-base font-semibold text-slate-900">
                     {part.label}
                   </p>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     {part.short}
                   </p>
-                  <p className="mt-2 text-sm text-slate-600">{part.note}</p>
+                  <p className="mt-1.5 text-sm text-slate-500">{part.note}</p>
                 </div>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <div className="panel-card p-5">
+      {/* ─── Drop Canvas ─── */}
+      <div className="drop-canvas">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Physics Stage
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Assemble the energy pathway</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Assemble the energy pathway</h2>
           </div>
           <div
             className={`status-pill ${
@@ -297,7 +305,7 @@ export default function CircuitBuilder({ controller }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(180deg,#eef6ff_0%,#ffffff_52%,#fff8eb_100%)] p-4 sm:p-6">
+        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#eef6ff_0%,#ffffff_48%,#fff8eb_100%)] p-5 sm:p-6">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -305,6 +313,7 @@ export default function CircuitBuilder({ controller }) {
                   const part = placements[slot.id]
                     ? partMap[placements[slot.id]]
                     : null;
+                  const isDragOver = dragOverSlot === slot.id;
 
                   return (
                     <button
@@ -312,7 +321,11 @@ export default function CircuitBuilder({ controller }) {
                       type="button"
                       disabled={controller.isLocked}
                       onClick={() => handlePlace(slot.id, selectedItemId)}
-                      onDragOver={(event) => event.preventDefault()}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setDragOverSlot(slot.id);
+                      }}
+                      onDragLeave={() => setDragOverSlot(null)}
                       onDrop={(event) => {
                         event.preventDefault();
                         handlePlace(slot.id, selectedItemId);
@@ -320,26 +333,27 @@ export default function CircuitBuilder({ controller }) {
                       className={[
                         "drop-slot text-left",
                         part ? "border-indigo-200 bg-indigo-50/60" : "",
+                        isDragOver ? "drop-slot-active" : "",
                       ].join(" ")}
                     >
                       {part ? (
                         <div className="flex items-start gap-3 text-left">
                           <div
-                            className={`mt-1 h-11 w-11 rounded-2xl bg-gradient-to-br ${part.tone}`}
+                            className={`mt-1 h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br ${part.tone} shadow-md`}
                           />
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                               {slot.label}
                             </p>
-                            <p className="mt-2 text-sm font-semibold text-slate-900">
+                            <p className="mt-2 text-base font-semibold text-slate-900">
                               {part.label}
                             </p>
-                            <p className="text-sm text-slate-600">{part.short}</p>
+                            <p className="text-sm text-slate-500">{part.short}</p>
                           </div>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">
+                          <p className="text-base font-semibold text-slate-800">
                             {slot.label}
                           </p>
                           <p className="mt-2 text-sm text-slate-500">{slot.hint}</p>
@@ -350,10 +364,10 @@ export default function CircuitBuilder({ controller }) {
                 })}
               </div>
 
-              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-4 sm:p-6">
+              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 sm:p-6">
                 <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
                   <div className="rounded-[26px] bg-[radial-gradient(circle_at_25%_22%,rgba(14,165,233,0.12),transparent_24%),radial-gradient(circle_at_82%_24%,rgba(251,191,36,0.18),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.85)_0%,rgba(241,245,249,0.72)_100%)] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Circuit schematic
                     </p>
                     <div className="relative mt-5 flex min-h-[250px] items-center justify-center">
@@ -421,7 +435,7 @@ export default function CircuitBuilder({ controller }) {
                           return (
                             <div key={slot.id} className="flex justify-center">
                               <div className="rounded-[20px] bg-white/92 px-3 py-3 text-center shadow-md ring-1 ring-slate-100">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                                   {slot.label}
                                 </p>
                                 <p className="mt-2 text-sm font-semibold text-slate-900">
@@ -442,18 +456,18 @@ export default function CircuitBuilder({ controller }) {
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="panel-card p-4"
+                        className="panel-card p-5"
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                           Diagnostic result
                         </p>
-                        <p className="mt-3 text-sm font-semibold text-slate-900">
+                        <p className="mt-3 text-base font-semibold text-slate-900">
                           {evaluation.title}
                         </p>
-                        <p className="mt-3 text-sm text-slate-600">
+                        <p className="mt-3 text-sm text-slate-500">
                           {evaluation.observation}
                         </p>
-                        <p className="mt-3 text-sm text-slate-500">
+                        <p className="mt-3 text-sm text-slate-400">
                           {evaluation.evidence}
                         </p>
                       </motion.div>
@@ -505,11 +519,11 @@ export default function CircuitBuilder({ controller }) {
             </div>
 
             <div className="space-y-4">
-              <div className="panel-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="panel-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Physics rule
                 </p>
-                <p className="mt-3 text-sm text-slate-600">
+                <p className="mt-3 text-sm text-slate-500">
                   A working lamp circuit needs a source, a conductor, a closed
                   switch, and the correct output device all connected in one loop.
                 </p>

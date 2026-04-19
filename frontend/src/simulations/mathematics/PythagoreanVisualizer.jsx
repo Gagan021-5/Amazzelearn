@@ -26,6 +26,7 @@ export default function PythagoreanVisualizer({ controller }) {
   const [inputMode, setInputMode] = useState("drag"); // "drag" | "slider"
   const [sliderA, setSliderA] = useState(6);
   const [sliderB, setSliderB] = useState(8);
+  const [dragOverSlot, setDragOverSlot] = useState(null);
 
   const {
     placements,
@@ -92,11 +93,11 @@ export default function PythagoreanVisualizer({ controller }) {
     if (controller.isLocked || !value) return;
     controller.clearFeedback();
     placeItem(slotId, value);
+    setDragOverSlot(null);
   };
 
   const handleCheck = () => {
     if (inputMode === "slider") {
-      // In slider mode, always valid — the sim is exploratory
       const isWholeNumber = cComputed === Math.round(cComputed);
       const isTarget = isWholeNumber && Math.round(cComputed) === 10;
 
@@ -128,14 +129,15 @@ export default function PythagoreanVisualizer({ controller }) {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <div className="panel-card p-5">
+    <div className="sim-layout">
+      {/* ─── Item Bank ─── */}
+      <div className="item-bank">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               {inputMode === "drag" ? "Number Bank" : "Slider Controls"}
             </p>
-            <h2 className="mt-2 text-2xl font-bold">Right triangle builder</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">Right triangle builder</h2>
           </div>
           <div className="rounded-2xl bg-amber-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Goal</p>
@@ -144,7 +146,7 @@ export default function PythagoreanVisualizer({ controller }) {
         </div>
 
         {/* ── Mode Toggle ── */}
-        <div className="mt-4 flex rounded-2xl bg-slate-100 p-1">
+        <div className="mt-5 flex rounded-2xl bg-slate-100 p-1">
           {["drag", "slider"].map((mode) => (
             <button
               key={mode}
@@ -164,21 +166,21 @@ export default function PythagoreanVisualizer({ controller }) {
 
         {inputMode === "drag" ? (
           /* ── Drag Mode: Number Bank ── */
-          <div className="inventory-rail hide-scrollbar mt-5">
+          <div className="inventory-rail hide-scrollbar mt-6">
             {numberTiles.map((value, index) => {
               const tone = [
-                "from-orange-300 to-amber-400",
-                "from-sky-300 to-cyan-300",
-                "from-emerald-300 to-teal-400",
-                "from-rose-300 to-orange-400",
-                "from-indigo-300 to-violet-400",
-                "from-amber-300 to-yellow-400",
-                "from-cyan-300 to-sky-500",
-                "from-fuchsia-300 to-violet-400",
+                "from-orange-400 to-amber-500",
+                "from-sky-400 to-cyan-500",
+                "from-emerald-400 to-teal-500",
+                "from-rose-400 to-orange-500",
+                "from-indigo-400 to-violet-500",
+                "from-amber-400 to-yellow-500",
+                "from-cyan-400 to-sky-600",
+                "from-fuchsia-400 to-violet-500",
               ][index];
 
               return (
-                <button
+                <motion.button
                   key={value}
                   type="button"
                   draggable={!controller.isLocked}
@@ -190,29 +192,32 @@ export default function PythagoreanVisualizer({ controller }) {
                   onDragEnd={() => setDraggedItemId(null)}
                   onClick={() => handleSelect(value)}
                   disabled={controller.isLocked}
+                  whileHover={{ scale: 1.04 }}
+                  whileDrag={{ scale: 1.08, boxShadow: "0 12px 28px rgba(139,92,246,0.18)" }}
+                  whileTap={{ scale: 0.96 }}
                   className={[
                     "token-card flex h-full items-center justify-center text-center",
                     selectedItemId === value ? "border-sky-300 ring-4 ring-sky-100" : "",
-                    isPlaced(value) ? "opacity-55" : "",
+                    isPlaced(value) ? "opacity-40 pointer-events-none" : "",
                   ].join(" ")}
                 >
                   <div>
-                    <div className={`mx-auto h-12 w-12 rounded-2xl bg-gradient-to-br ${tone}`} />
-                    <p className="mt-3 text-lg font-bold text-slate-900">{value}</p>
+                    <div className={`mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br ${tone} shadow-md`} />
+                    <p className="mt-3 text-xl font-bold text-slate-900">{value}</p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
         ) : (
           /* ── Slider Mode ── */
-          <div className="mt-5 space-y-5">
-            <div className="rounded-[20px] bg-slate-50 p-4">
+          <div className="mt-6 space-y-5">
+            <div className="rounded-[20px] bg-slate-50 p-5">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-slate-700">
                   Side a (Base)
                 </label>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-800">
+                <span className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-bold text-amber-800">
                   {sliderA}
                 </span>
               </div>
@@ -226,12 +231,12 @@ export default function PythagoreanVisualizer({ controller }) {
                 className="mt-3"
               />
             </div>
-            <div className="rounded-[20px] bg-slate-50 p-4">
+            <div className="rounded-[20px] bg-slate-50 p-5">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-slate-700">
                   Side b (Perpendicular)
                 </label>
-                <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-bold text-sky-800">
+                <span className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-bold text-sky-800">
                   {sliderB}
                 </span>
               </div>
@@ -245,7 +250,7 @@ export default function PythagoreanVisualizer({ controller }) {
                 className="mt-3"
               />
             </div>
-            <div className="rounded-[20px] bg-emerald-50 p-4">
+            <div className="rounded-[20px] bg-emerald-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                 Computed hypotenuse c
               </p>
@@ -259,19 +264,20 @@ export default function PythagoreanVisualizer({ controller }) {
           </div>
         )}
 
-        <div className="mt-5 rounded-[24px] bg-slate-50 p-4">
+        <div className="mt-5 rounded-[24px] bg-slate-50 p-5">
           <p className="text-sm font-semibold text-slate-900">Math check</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-500">
             Pick side lengths that satisfy the theorem and keep the hypotenuse at exactly 10 units.
           </p>
         </div>
       </div>
 
-      <div className="panel-card p-5">
+      {/* ─── Drop Canvas ─── */}
+      <div className="drop-canvas">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Geometry Stage</p>
-            <h2 className="mt-2 text-2xl font-bold">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Geometry Stage</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">
               {inputMode === "slider" ? "Adjust the sliders to explore" : "Drop the side lengths onto the triangle"}
             </h2>
           </div>
@@ -284,7 +290,7 @@ export default function PythagoreanVisualizer({ controller }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_56%,#eff6ff_100%)] p-4 sm:p-6">
+        <div className="mt-6 rounded-[28px] bg-[linear-gradient(135deg,#fff8eb_0%,#ffffff_50%,#eff6ff_100%)] p-5 sm:p-6">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
               {/* Drop slots — only visible in drag mode */}
@@ -292,13 +298,18 @@ export default function PythagoreanVisualizer({ controller }) {
                 <div className="grid gap-4 md:grid-cols-3">
                   {slots.map((slot) => {
                     const value = placements[slot.id];
+                    const isDragOver = dragOverSlot === slot.id;
                     return (
                       <button
                         key={slot.id}
                         type="button"
                         disabled={controller.isLocked}
                         onClick={() => handlePlace(slot.id, selectedItemId)}
-                        onDragOver={(event) => event.preventDefault()}
+                        onDragOver={(event) => {
+                          event.preventDefault();
+                          setDragOverSlot(slot.id);
+                        }}
+                        onDragLeave={() => setDragOverSlot(null)}
                         onDrop={(event) => {
                           event.preventDefault();
                           handlePlace(slot.id, selectedItemId);
@@ -306,17 +317,18 @@ export default function PythagoreanVisualizer({ controller }) {
                         className={[
                           "drop-slot text-left",
                           value ? "border-amber-200 bg-amber-50/60" : "",
+                          isDragOver ? "drop-slot-active" : "",
                         ].join(" ")}
                       >
                         {value ? (
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{slot.label}</p>
-                            <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
-                            <p className="text-sm text-slate-600">units</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{slot.label}</p>
+                            <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
+                            <p className="text-sm text-slate-500">units</p>
                           </div>
                         ) : (
                           <div>
-                            <p className="text-sm font-semibold text-slate-800">{slot.label}</p>
+                            <p className="text-base font-semibold text-slate-800">{slot.label}</p>
                             <p className="mt-2 text-sm text-slate-500">{slot.hint}</p>
                           </div>
                         )}
@@ -327,7 +339,7 @@ export default function PythagoreanVisualizer({ controller }) {
               )}
 
               {/* ── SVG Triangle Visualization ── */}
-              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-4 sm:p-6">
+              <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 sm:p-6">
                 <div className="overflow-x-auto pb-2">
                   <div className="min-w-[420px]">
                     <svg viewBox="0 0 420 320" className="w-full">
@@ -453,7 +465,7 @@ export default function PythagoreanVisualizer({ controller }) {
 
                 {/* ── Dynamic Calculation Box ── */}
                 <motion.div
-                  className="mt-5 rounded-[24px] bg-slate-50 p-4"
+                  className="mt-5 rounded-[24px] bg-slate-50 p-5"
                   animate={{
                     borderColor: isRightTriangle ? "rgba(16,185,129,0.4)" : "transparent",
                   }}
@@ -466,15 +478,15 @@ export default function PythagoreanVisualizer({ controller }) {
                         : `a² + b² = c² → ${a}² + ${b}² = ${c}² → ${lhs} ${lhs === rhs ? "=" : "≠"} ${rhs}`
                       : "a² + b² = c²"}
                   </p>
-                  <p className="mt-2 text-sm text-slate-600">{theoremMessage}</p>
+                  <p className="mt-2 text-sm text-slate-500">{theoremMessage}</p>
                 </motion.div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="panel-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Area comparison</p>
-                <div className="mt-3 grid gap-3">
+              <div className="panel-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Area comparison</p>
+                <div className="mt-4 grid gap-3">
                   {[
                     { label: "a²", value: a ? a ** 2 : "-", tone: "bg-amber-50 text-amber-700" },
                     { label: "b²", value: b ? b ** 2 : "-", tone: "bg-sky-50 text-sky-700" },
@@ -488,10 +500,10 @@ export default function PythagoreanVisualizer({ controller }) {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl bg-slate-50 px-5 py-3.5"
                     >
                       <span className="text-sm font-semibold text-slate-700">{item.label}</span>
-                      <span className={`rounded-full px-3 py-1 text-sm font-semibold ${item.tone}`}>
+                      <span className={`rounded-full px-4 py-1.5 text-sm font-semibold ${item.tone}`}>
                         {item.value}
                       </span>
                     </div>
